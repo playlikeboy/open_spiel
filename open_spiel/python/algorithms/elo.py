@@ -11,17 +11,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# Modified: 2023 James Flynn
-# Original:
-# https://github.com/deepmind/open_spiel/blob/master/open_spiel/python/algorithms/cfr.py
 
-"""Elo rating system."""
+"""Elo rating system.
+
+There are two ways to compute the Elo ratings:
+  1. From a win matrix and a draw matrix.
+  2. From a list of match records.
+
+The function here is a wrapper to method (1) that simply converts numpy arrays
+to lists of lists and then calls the pybind11 wrapper. For examples of (2),
+please see elo_test.py.
+
+Both are wrappers around the C++ implementation in evaluation/elo.cc, which is
+based on the algorithm of Hunter, MM Algorithms for Generalized Bradley-Terry
+Models, The Annals of Statistics 2004, Vol. 32, No. 1, 384--406.
+"""
 
 import numpy as np
 import pyspiel
 
 
-def compute_elo(
+def compute_ratings_from_matrices(
     win_matrix: np.ndarray,
     draw_matrix: np.ndarray | None = None,
     smoothing_factor: float = pyspiel.elo.DEFAULT_SMOOTHING_FACTOR,
@@ -29,10 +39,12 @@ def compute_elo(
     convergence_delta: float = pyspiel.elo.DEFAULT_CONVERGENCE_DELTA,
 ) -> np.ndarray:
   """Compute Elo ratings from a win matrix and a draw matrix."""
-  return pyspiel.elo.compute_elo(
+  options = pyspiel.elo.default_elo_options()
+  options.smoothing_factor = smoothing_factor
+  options.max_iterations = max_iterations
+  options.convergence_delta = convergence_delta
+  return pyspiel.elo.compute_ratings_from_matrices(
       win_matrix=win_matrix.tolist(),
       draw_matrix=(draw_matrix.tolist() if draw_matrix is not None else []),
-      smoothing_factor=smoothing_factor,
-      max_iterations=max_iterations,
-      convergence_delta=convergence_delta
+      options=options,
   )
