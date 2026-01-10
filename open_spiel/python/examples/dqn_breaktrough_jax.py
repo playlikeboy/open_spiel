@@ -21,7 +21,7 @@ import numpy as np
 
 from open_spiel.python import rl_environment
 from open_spiel.python.algorithms import random_agent
-from open_spiel.python.jax import dqn_refactor as dqn
+from open_spiel.python.jax import dqn
 
 FLAGS = flags.FLAGS
 
@@ -44,6 +44,7 @@ flags.DEFINE_integer("replay_buffer_capacity", int(1e5),
                      "Size of the replay buffer.")
 flags.DEFINE_integer("batch_size", 32,
                      "Number of transitions to sample at each learning step.")
+flags.DEFINE_bool("use_checkpoints", False, "Save/load neural network weights.")
 
 
 def eval_against_random_bots(env, trained_agents, random_agents, num_episodes):
@@ -93,12 +94,12 @@ def main(_):
   
   agents = [
       dqn.DQN(
-          player_id=idx,
-          state_representation_size=info_state_size,
-          num_actions=num_actions,
-          hidden_layers_sizes=hidden_layers_sizes,
-          replay_buffer_capacity=FLAGS.replay_buffer_capacity,
-          batch_size=FLAGS.batch_size,
+        player_id=idx,
+        state_representation_size=info_state_size,
+        num_actions=num_actions,
+        hidden_layers_sizes=hidden_layers_sizes,
+        replay_buffer_capacity=FLAGS.replay_buffer_capacity,
+        batch_size=FLAGS.batch_size,
       )
       for idx in range(num_players)
   ]
@@ -107,10 +108,10 @@ def main(_):
     if (ep + 1) % FLAGS.eval_every == 0:
       r_mean = eval_against_random_bots(env, agents, random_agents, 1000)
       logging.info("[%s] Mean episode rewards %s", ep + 1, r_mean)
-    # TODO: saving
-    # if (ep + 1) % FLAGS.save_every == 0:
-    #   for agent in agents:
-    #     agent.save(FLAGS.checkpoint_dir)
+
+    if FLAGS.use_checkpoints and (ep + 1) % FLAGS.save_every == 0:
+      for agent in agents:
+        agent.save(FLAGS.checkpoint_dir)
 
     time_step = env.reset()
     while not time_step.last():
