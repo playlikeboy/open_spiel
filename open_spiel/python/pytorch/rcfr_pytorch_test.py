@@ -16,7 +16,6 @@ import itertools
 
 import numpy as np
 
-# Note: this import needs to come before Tensorflow to fix a malloc error.
 import pyspiel  # pylint: disable=g-bad-import-order
 import torch
 import torch.nn as nn

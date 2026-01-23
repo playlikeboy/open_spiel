@@ -63,7 +63,7 @@ def sequence_features(
   state_features: list[str | int],
   legal_actions: list[int],
   num_distinct_actions: int,
-):
+) -> torch.Tensor:
   """Constructs features for each sequence by extending state features.
 
   Sequences features are constructed by concatenating one-hot features
@@ -80,9 +80,6 @@ def sequence_features(
   Returns:
     A `torch.Tensor` feature matrix with one row for each sequence and # state
     features plus `num_distinct_actions`-columns.
-
-  Raises:
-    ValueError: If `state_features` has a rank > 2.
   """
   state_features = torch.as_tensor(state_features)
   state_features = state_features[None].repeat(len(legal_actions), 1)
@@ -481,7 +478,7 @@ class ResidualMLPBlock(nn.Module):
     output_size: int,
     num_hidden_factors: int = 0,
     hidden_activation: nn.Module = nn.ReLU(),
-  ):
+  ) -> None:
     super().__init__()
     self._activation = hidden_activation
     self._gate_layer = (
@@ -510,7 +507,7 @@ class DeepRcfrModel(nn.Module):
   """A flexible deep feedforward RCFR model class.
 
   Properties:
-    layers: The `torch.keras.Layer` layers describing this  model.
+    layers: The `torch.nn.Sequential` layers describing this  model.
   """
 
   def __init__(
@@ -521,7 +518,7 @@ class DeepRcfrModel(nn.Module):
     num_hidden_factors: int = 0,
     hidden_activation: nn.Module = nn.ReLU(),
     use_skip_connections: bool = False,
-  ):
+  ) -> None:
     """Creates a new `DeepRcfrModel.
 
     Args:
